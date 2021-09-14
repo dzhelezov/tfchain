@@ -41,7 +41,7 @@ typegen:
     - smartContractModule.ContractUpdated
     - smartContractModule.ContractCanceled
     - smartContractModule.ContractBilled
-  outDir: types
+  outDir: chain
 
 mappings:
   mappingsModule: mappings
