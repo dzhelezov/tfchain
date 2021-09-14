@@ -1,15 +1,14 @@
 import { Service, Inject } from 'typedi';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { InjectRepository } from 'typeorm-typedi-extensions';
-import { WhereInput } from 'warthog';
-import { WarthogBaseService } from '../../server/WarthogBaseService';
+import { WhereInput, HydraBaseService } from '@subsquid/warthog';
 
 import { Consumption } from './consumption.model';
 
 import { ConsumptionWhereArgs, ConsumptionWhereInput } from '../../warthog';
 
 @Service('ConsumptionService')
-export class ConsumptionService extends WarthogBaseService<Consumption> {
+export class ConsumptionService extends HydraBaseService<Consumption> {
   constructor(@InjectRepository(Consumption) protected readonly repository: Repository<Consumption>) {
     super(Consumption, repository);
   }
@@ -24,13 +23,23 @@ export class ConsumptionService extends WarthogBaseService<Consumption> {
     return this.findWithRelations<W>(where, orderBy, limit, offset, fields);
   }
 
-  async findWithRelations<W extends WhereInput>(
+  findWithRelations<W extends WhereInput>(
     _where?: any,
     orderBy?: string | string[],
     limit?: number,
     offset?: number,
     fields?: string[]
   ): Promise<Consumption[]> {
+    return this.buildFindWithRelationsQuery(_where, orderBy, limit, offset, fields).getMany();
+  }
+
+  buildFindWithRelationsQuery<W extends WhereInput>(
+    _where?: any,
+    orderBy?: string | string[],
+    limit?: number,
+    offset?: number,
+    fields?: string[]
+  ): SelectQueryBuilder<Consumption> {
     const where = <ConsumptionWhereInput>(_where || {});
 
     let mainQuery = this.buildFindQueryWithParams(<any>where, orderBy, undefined, fields, 'main').take(undefined); // remove LIMIT
@@ -39,9 +48,6 @@ export class ConsumptionService extends WarthogBaseService<Consumption> {
 
     mainQuery = mainQuery.setParameters(parameters);
 
-    return mainQuery
-      .take(limit || 50)
-      .skip(offset || 0)
-      .getMany();
+    return mainQuery.take(limit || 50).skip(offset || 0);
   }
 }
